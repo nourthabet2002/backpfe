@@ -3,14 +3,16 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const Reservationmodel = require("./models/réservation");
 const bodyParser = require("body-parser");
+const cors = require("cors");
 const Chantiermodel = require("./models/chantier");
 const Chefmodel = require("./models/chef");
 const Employee = require("./models/employe");
-const PORT = process.env.PORT || 9000;
+const PORT = process.env.PORT || 7000;
 
 const app = express();
 app.use(bodyParser.json());
 app.use(express.json());
+app.use(cors());
 mongoose
   .connect(process.env.DB_URL, {
     useNewUrlParser: true,
@@ -163,5 +165,26 @@ app.delete("/chantier/:id", async (req, res) => {
     res.json({ message: "Chantier deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+app.put('/employe/:id', async (req, res) => {
+  const id = req.params.id;
+  const { nom, prénom, email, password, num_tel } = req.body;
+
+  try {
+    const updatedEmployee = await Employee.findByIdAndUpdate(
+      id,
+      { $set: { nom, prénom, email, password, num_tel } },
+      { new: true }
+    );
+
+    if (!updatedEmployee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
+    res.status(200).json(updatedEmployee);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
