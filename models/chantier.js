@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 // Define the schema for the Chantier model
 const chantierSchema = new mongoose.Schema({
   datedebut: {
-    type: Date,
+    type: String,
     required: true
   },
   duree: {
@@ -11,7 +11,7 @@ const chantierSchema = new mongoose.Schema({
     required: true
   },
   datefin: {
-    type: Date,
+    type: String,
     required: true
   }
 });

@@ -7,6 +7,7 @@ const cors = require("cors");
 const Chantiermodel = require("./models/chantier");
 const Chefmodel = require("./models/chef");
 const Employee = require("./models/employe");
+const Chantier = require("./models/chantier");
 const PORT = process.env.PORT || 7000;
 
 const app = express();
@@ -183,6 +184,27 @@ app.put('/employe/:id', async (req, res) => {
     }
 
     res.status(200).json(updatedEmployee);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+app.put('/chantier/:id', async (req, res) => {
+  const id = req.params.id;
+  const { datedebut, duree, datefin } = req.body;
+
+  try {
+    const updatedChantier = await Chantier.findByIdAndUpdate(
+      id,
+      { $set: { datedebut, duree, datefin } },
+      { new: true }
+    );
+
+    if (!updatedChantier) {
+      return res.status(404).json({ message: 'Chantier not found' });
+    }
+
+    res.status(200).json(updatedChantier);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
