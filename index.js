@@ -210,3 +210,24 @@ app.put('/chantier/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+app.put('/chef/:id', async (req, res) => {
+  const id = req.params.id;
+  const { nom, prénom, email, password, numtel } = req.body;
+
+  try {
+    const updatedChefmodel = await Chefmodel.findByIdAndUpdate(
+      id,
+      { $set: { nom, prénom, email, password, numtel } },
+      { new: true }
+    );
+
+    if (!updatedChefmodel) {
+      return res.status(404).json({ message: 'Chef not found' });
+    }
+
+    res.status(200).json(updatedChefmodel);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
