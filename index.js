@@ -8,6 +8,8 @@ const Chantiermodel = require("./models/chantier");
 const Chefmodel = require("./models/chef");
 const Employee = require("./models/employe");
 const Chantier = require("./models/chantier");
+const avis = require("./models/avis");
+const resclient = require("./models/resclient");
 const PORT = process.env.PORT || 7000;
 
 const app = express();
@@ -230,4 +232,40 @@ app.put('/chef/:id', async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
   }
+});
+app.post("/avis/add", async (req, res) => {
+  //     try{var response = await personmodel.find({name : "%sa%"})
+  //     res.json(response);
+  // }catch (error){
+  //     console.log()
+  // }
+  console.log(req.body);
+  const { commentaire } = req.body;
+  let newavis = avis({
+   
+    commentaire:commentaire,
+  });
+  var response = await newavis.save();
+
+  res.json(response);
+});
+app.post("/resclient/add", async (req, res) => {
+  //     try{var response = await personmodel.find({name : "%sa%"})
+  //     res.json(response);
+  // }catch (error){
+  //     console.log()
+  // }
+  console.log(req.body);
+  const { serviceName, subCategory, date, numberOfrooms, place } = req.body;
+  let newresclient = resclient({
+    serviceName: serviceName,
+    subCategory: subCategory,
+    date: date,
+    numberOfrooms: numberOfrooms,
+    place:place,
+    
+  });
+  var response = await newresclient.save();
+
+  res.json(response);
 });
