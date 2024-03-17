@@ -10,6 +10,8 @@ const Employee = require("./models/employe");
 const Chantier = require("./models/chantier");
 const avis = require("./models/avis");
 const resclient = require("./models/resclient");
+const Reservation = require("./models/réservation");
+const service = require("./models/service");
 const PORT = process.env.PORT || 7000;
 
 const app = express();
@@ -266,6 +268,31 @@ app.post("/resclient/add", async (req, res) => {
     
   });
   var response = await newresclient.save();
+
+  res.json(response);
+});
+app.get("/Reservation", async (req, res) => {
+  try {
+    const Reservation = await Reservationmodel.find();
+    res.json(Reservation);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+app.post("/service/add", async (req, res) => {
+  //     try{var response = await personmodel.find({name : "%sa%"})
+  //     res.json(response);
+  // }catch (error){
+  //     console.log()
+  // }
+  console.log(req.body);
+  const { name, subCategory } = req.body;
+  let newservice = service({
+    name: name,
+    subCategory: subCategory,
+    
+  });
+  var response = await newservice.save();
 
   res.json(response);
 });
