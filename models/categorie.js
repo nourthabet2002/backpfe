@@ -1,15 +1,15 @@
 const mongoose = require('mongoose');
 
 // Define the schema for the Reservation model
-const serviceSchema = new mongoose.Schema({
+const categorieSchema = new mongoose.Schema({
   name: {
     type: String,
     
   }
   
  
-}, { collection: "service" });
+}, { collection: "categorie" });
 // Create and export the Reservation model based on the schema
-const service = mongoose.model('service', serviceSchema);
+const categorie = mongoose.model('categorie', categorieSchema);
 
-module.exports = service;
+module.exports = categorie;

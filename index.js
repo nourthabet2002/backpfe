@@ -12,6 +12,7 @@ const avis = require("./models/avis");
 const resclient = require("./models/resclient");
 const Reservation = require("./models/réservation");
 const service = require("./models/service");
+const categorie = require("./models/categorie");
 const PORT = process.env.PORT || 7000;
 
 const app = express();
@@ -286,11 +287,9 @@ app.post("/service/add", async (req, res) => {
   //     console.log()
   // }
   console.log(req.body);
-  const { name, subCategory } = req.body;
+  const { name  } = req.body;
   let newservice = service({
     name: name,
-    subCategory: subCategory,
-    
   });
   var response = await newservice.save();
 
