@@ -1,4 +1,5 @@
 const express = require("express");
+
 const mongoose = require("mongoose");
 require("dotenv").config();
 const Reservationmodel = require("./models/réservation");
@@ -13,12 +14,16 @@ const resclient = require("./models/resclient");
 const Reservation = require("./models/réservation");
 const service = require("./models/service");
 const categorie = require("./models/categorie");
+
 const PORT = process.env.PORT || 7000;
 
 const app = express();
+
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(cors());
+
+
 mongoose
   .connect(process.env.DB_URL, {
     useNewUrlParser: true,
@@ -29,6 +34,25 @@ mongoose
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
+  });
+  app.post('/services/:serviceId/add-subcategory', async (req, res) => {
+    try {
+      const serviceId = req.params.serviceId;
+      const { category } = req.body; // Assuming the subcategory data is sent in the request body
+  
+      // Find the service by ID and update it to add the subcategory
+      const service = await service.findByIdAndUpdate(serviceId, { $addToSet: { subcategories: category } }, { new: true });
+  
+      if (!service) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
+  
+      // Send a success response with the updated service
+      res.status(200).json(service);
+    } catch (error) {
+      console.error('Error adding subcategory:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
   });
   app.post("/add", async (req, res) => {
     //     try{var response = await personmodel.find({name : "%sa%"})
@@ -122,13 +146,11 @@ mongoose
       res.status(500).json({ message: err.message });
     }
 });
-app.delete("/chef/:id", async (req, res) => {
-  console.log(req.params);
-  const id = req.params.id;
-  console.log("id to be deleted =", id);
+app.delete("/chef/:nom", async (req, res) => {
+  const nom = req.params.nom;
 
   try {
-    const deletedChef = await Chefmodel.findOneAndDelete({ _id: id });
+    const deletedChef = await Chefmodel.findOneAndDelete({ nom });
 
     if (!deletedChef) {
       return res.status(404).json({ message: "Chef not found" });
@@ -139,6 +161,7 @@ app.delete("/chef/:id", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 app.delete("/employe/:id", async (req, res) => {
   console.log(req.params);
   const id = req.params.id;
@@ -215,27 +238,27 @@ app.put('/chantier/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-app.put('/chef/:id', async (req, res) => {
-  const id = req.params.id;
-  const { nom, prénom, email, password, numtel } = req.body;
+app.put("/chef/:nom", async (req, res) => {
+  const nom = req.params.nom;
+  const updatedName = req.body.name; // Assuming you're sending the updated name in the request body
 
   try {
-    const updatedChefmodel = await Chefmodel.findByIdAndUpdate(
-      id,
-      { $set: { nom, prénom, email, password, numtel } },
-      { new: true }
+    const updatedChef = await Chefmodel.findOneAndUpdate(
+      { nom }, // Filter to find the chef by name
+      { $set: { nom: updatedName } }, // Update the name field
+      { new: true } // Return the updated document
     );
 
-    if (!updatedChefmodel) {
-      return res.status(404).json({ message: 'Chef not found' });
+    if (!updatedChef) {
+      return res.status(404).json({ message: "Chef not found" });
     }
 
-    res.status(200).json(updatedChefmodel);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.json({ message: "Chef updated", updatedChef });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
+
 app.post("/avis/add", async (req, res) => {
   //     try{var response = await personmodel.find({name : "%sa%"})
   //     res.json(response);
@@ -293,5 +316,38 @@ app.post("/service/add", async (req, res) => {
   });
   var response = await newservice.save();
 
+  res.json(response);
+});
+app.get("/chef", async (req, res) => {
+  try {
+    const chefs = await Chefmodel.find();
+    res.json(chefs);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+app.get("/service", async (req, res) => {
+  try {
+    const services = await service.find(); // Assuming your model name is Service
+    res.json(services);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+app.post("/categorie/add", async (req, res) => {
+  //     try{var response = await personmodel.find({name : "%sa%"})
+  //     res.json(response);
+  // }catch (error){
+  //     console.log()
+  // }
+  console.log(req.body);
+  const { name } = req.body;
+  let newcategorie = categorie({
+    
+    name:name,
+    
+  });
+  var response = await newcategorie.save();
   res.json(response);
 });
