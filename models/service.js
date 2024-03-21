@@ -1,25 +1,17 @@
 const mongoose = require('mongoose');
 
-// Define the schema for the Reservation model
+// Define the schema for the Service model
 const serviceSchema = new mongoose.Schema({
-  
-  categorie : {
-    type : mongoose.Schema.Types.ObjectId,
-    ref : 'categorie',
-    required: true
-
-}
-,
-  
-  
-  name: {
-    type: String,
-    
-  }
-  
- 
+    category: {
+        type: String, // Change the type to String
+        required: true
+    },
+    name: {
+        type: String,
+        required: true
+    }
 }, { collection: "service" });
-// Create and export the Reservation model based on the schema
+
 
 const service = mongoose.model('service', serviceSchema);
 

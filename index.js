@@ -1,5 +1,4 @@
 const express = require("express");
-
 const mongoose = require("mongoose");
 require("dotenv").config();
 const Reservationmodel = require("./models/réservation");
@@ -35,25 +34,7 @@ mongoose
       console.log(`Server is running on port ${PORT}`);
     });
   });
-  app.post('/services/:serviceId/add-subcategory', async (req, res) => {
-    try {
-      const serviceId = req.params.serviceId;
-      const { category } = req.body; // Assuming the subcategory data is sent in the request body
-  
-      // Find the service by ID and update it to add the subcategory
-      const service = await service.findByIdAndUpdate(serviceId, { $addToSet: { subcategories: category } }, { new: true });
-  
-      if (!service) {
-        return res.status(404).json({ message: 'Service not found' });
-      }
-  
-      // Send a success response with the updated service
-      res.status(200).json(service);
-    } catch (error) {
-      console.error('Error adding subcategory:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
+ 
   app.post("/add", async (req, res) => {
     //     try{var response = await personmodel.find({name : "%sa%"})
     //     res.json(response);
@@ -304,20 +285,31 @@ app.get("/Reservation", async (req, res) => {
   }
 });
 app.post("/service/add", async (req, res) => {
-  //     try{var response = await personmodel.find({name : "%sa%"})
-  //     res.json(response);
-  // }catch (error){
-  //     console.log()
-  // }
-  console.log(req.body);
-  const { name  } = req.body;
-  let newservice = service({
-    name: name,
-  });
-  var response = await newservice.save();
+  try {
+    const { name, category } = req.body; // Extract name and category from the request body
 
-  res.json(response);
+    // Check if both name and category are provided
+    if (!name || !category) {
+      return res.status(400).json({ error: "Both name and category are required" });
+    }
+
+    // Create a new service instance
+    let newService = new service({
+      name: name,
+      category: category
+    });
+
+    // Save the new service to the database
+    const response = await newService.save();
+
+    // Send the saved service document as response
+    res.json(response);
+  } catch (error) {
+    console.error("Error adding service:", error);
+    res.status(500).json({ error: "Failed to add service" });
+  }
 });
+
 app.get("/chef", async (req, res) => {
   try {
     const chefs = await Chefmodel.find();
