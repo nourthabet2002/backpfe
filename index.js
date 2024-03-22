@@ -13,7 +13,7 @@ const resclient = require("./models/resclient");
 const Reservation = require("./models/réservation");
 const service = require("./models/service");
 const categorie = require("./models/categorie");
-
+const admin = require("./models/admin");
 const PORT = process.env.PORT || 7000;
 
 const app = express();
@@ -341,5 +341,30 @@ app.post("/categorie/add", async (req, res) => {
     
   });
   var response = await newcategorie.save();
+  res.json(response);
+});
+app.get("/avis", async (req, res) => {
+  try {
+    const aviss = await avis.find(); // Assuming your model name is Service
+    res.json(aviss);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+app.post("/admin/add", async (req, res) => {
+  //     try{var response = await personmodel.find({name : "%sa%"})
+  //     res.json(response);
+  // }catch (error){
+  //     console.log()
+  // }
+  console.log(req.body);
+  const { username, password} = req.body;
+  let newadmin = admin({
+    username: username,
+    password: password,
+   
+  });
+  var response = await newadmin.save();
+
   res.json(response);
 });
