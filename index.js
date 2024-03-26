@@ -99,9 +99,9 @@ mongoose
     //     console.log()
     // }
     console.log(req.body);
-    const { etatres, dateres, service } = req.body;
+    const {  dateres, service } = req.body;
     let newReservation = Reservationmodel({
-      etatres: etatres,
+      
       dateres: dateres,
       service: service,
      
@@ -221,12 +221,12 @@ app.put('/chantier/:id', async (req, res) => {
 });
 app.put("/chef/:nom", async (req, res) => {
   const nom = req.params.nom;
-  const updatedName = req.body.name; // Assuming you're sending the updated name in the request body
+  const updatedFields = req.body; // Assuming you're sending all updated fields in the request body
 
   try {
     const updatedChef = await Chefmodel.findOneAndUpdate(
       { nom }, // Filter to find the chef by name
-      { $set: { nom: updatedName } }, // Update the name field
+      { $set: updatedFields }, // Update all fields based on the provided data
       { new: true } // Return the updated document
     );
 
@@ -239,6 +239,7 @@ app.put("/chef/:nom", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 app.post("/avis/add", async (req, res) => {
   //     try{var response = await personmodel.find({name : "%sa%"})
@@ -367,4 +368,16 @@ app.post("/admin/add", async (req, res) => {
   var response = await newadmin.save();
 
   res.json(response);
+});
+// Example backend route in Express.js
+app.get('/chef/:nom', async (req, res) => {
+  const chefNom = req.params.nom;
+  // Use the chefNom to query your database or some other data source
+  // Return the data of the chef with the given nom
+  try {
+    const chef = await Chefmodel.findOne({ nom: chefNom }); // Example assuming you're using MongoDB with Mongoose
+    res.json(chef); // Send the chef data as JSON response
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });

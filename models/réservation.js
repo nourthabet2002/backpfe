@@ -2,10 +2,7 @@ const mongoose = require('mongoose');
 
 // Define the schema for the Reservation model
 const reservationSchema = new mongoose.Schema({
-  etatres: {
-    type: String,
-    required: true
-  },
+ 
   dateres: {
     type: String,
     required: true
