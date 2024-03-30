@@ -4,6 +4,8 @@ require("dotenv").config();
 const Reservationmodel = require("./models/réservation");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
 const Chantiermodel = require("./models/chantier");
 const Chefmodel = require("./models/chef");
 const Employee = require("./models/employe");
@@ -14,6 +16,10 @@ const Reservation = require("./models/réservation");
 const service = require("./models/service");
 const categorie = require("./models/categorie");
 const admin = require("./models/admin");
+const User = require("./models/userDetails");
+const affectchef = require("./models/affecterchef");
+const client = require("./models/client");
+const projet = require("./models/projet");
 const PORT = process.env.PORT || 7000;
 
 const app = express();
@@ -264,13 +270,13 @@ app.post("/resclient/add", async (req, res) => {
   //     console.log()
   // }
   console.log(req.body);
-  const { serviceName, subCategory, date, numberOfrooms, place } = req.body;
+  const { serviceName, subCategory, date, descripition, lieu } = req.body;
   let newresclient = resclient({
     serviceName: serviceName,
     subCategory: subCategory,
     date: date,
-    numberOfrooms: numberOfrooms,
-    place:place,
+    descripition: descripition,
+    lieu:lieu,
     
   });
   var response = await newresclient.save();
@@ -287,17 +293,16 @@ app.get("/Reservation", async (req, res) => {
 });
 app.post("/service/add", async (req, res) => {
   try {
-    const { name, category } = req.body; // Extract name and category from the request body
+    const { name } = req.body; // Extract name from the request body
 
-    // Check if both name and category are provided
-    if (!name || !category) {
-      return res.status(400).json({ error: "Both name and category are required" });
+    // Check if name is provided
+    if (!name) {
+      return res.status(400).json({ error: "Name is required" });
     }
 
     // Create a new service instance
     let newService = new service({
-      name: name,
-      category: category
+      name: name
     });
 
     // Save the new service to the database
@@ -329,20 +334,24 @@ app.get("/service", async (req, res) => {
 });
 
 app.post("/categorie/add", async (req, res) => {
-  //     try{var response = await personmodel.find({name : "%sa%"})
-  //     res.json(response);
-  // }catch (error){
-  //     console.log()
-  // }
-  console.log(req.body);
-  const { name } = req.body;
-  let newcategorie = categorie({
+  try {
+    console.log(req.body);
+    const { name, serviceId } = req.body; // Extracting name and serviceId from request body
+
+    // Creating a new categorie document with both name and serviceId
+    let newcategorie = new categorie({
+      name: name,
+      serviceId: serviceId
+    });
+
+    // Saving the new categorie document to the database
+    var response = await newcategorie.save();
     
-    name:name,
-    
-  });
-  var response = await newcategorie.save();
-  res.json(response);
+    res.json(response); // Sending back the response
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal Server Error" }); // Sending an error response in case of any errors
+  }
 });
 app.get("/avis", async (req, res) => {
   try {
@@ -381,3 +390,300 @@ app.get('/chef/:nom', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+app.post("/register", async (req, res) => {
+  const { fname, lname, email, password, userType } = req.body;
+
+  const encryptedPassword = await bcrypt.hash(password, 10);
+  try {
+    const oldUser = await User.findOne({ email });
+
+    if (oldUser) {
+      return res.json({ error: "User Exists" });
+    }
+    await User.create({
+      fname,
+      lname,
+      email,
+      password: encryptedPassword,
+      userType,
+    });
+    res.send({ status: "ok" });
+  } catch (error) {
+    res.send({ status: "error" });
+  }
+});
+app.post("/login-user", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    // If user does not exist, return error
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Compare password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    // If password is invalid, return error
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
+
+    // If authentication is successful, generate JWT token
+    const token = jwt.sign({ email: user.email }, JWT_SECRET, { expiresIn: "15m" });
+
+    // Return the token in the response
+    return res.status(200).json({ status: "ok", data: token });
+  } catch (error) {
+    // Handle any errors
+    console.error("Error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+app.post("/userData", async (req, res) => {
+  const { token } = req.body;
+  try {
+    const user = jwt.verify(token, JWT_SECRET, (err, res) => {
+      if (err) {
+        return "token expired";
+      }
+      return res;
+    });
+    console.log(user);
+    if (user == "token expired") {
+      return res.send({ status: "error", data: "token expired" });
+    }
+
+    const useremail = user.email;
+    User.findOne({ email: useremail })
+      .then((data) => {
+        res.send({ status: "ok", data: data });
+      })
+      .catch((error) => {
+        res.send({ status: "error", data: error });
+      });
+  } catch (error) {}
+});
+
+app.listen(5000, () => {
+  console.log("Server Started");
+});
+app.post("/affecter/chef", async (req, res) => {
+  //     try{var response = await personmodel.find({name : "%sa%"})
+  //     res.json(response);
+  // }catch (error){
+  //     console.log()
+  // }
+  console.log(req.body);
+  const { nom, service} = req.body;
+  let newaffectchef = affectchef({
+    nom: nom,
+    service: service,
+   
+  });
+  var response = await newaffectchef.save();
+
+  res.json(response);
+});
+app.get("/chef", async (req, res) => {
+  try {
+    const chefss = await Chefmodel.find(); // Assuming your model name is Service
+    res.json(chefss);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+app.post("/user", async (req, res) => {
+  //     try{var response = await personmodel.find({name : "%sa%"})
+  //     res.json(response);
+  // }catch (error){
+  //     console.log()
+  // }
+  console.log(req.body);
+  const { fname, lname, email, password, userType } = req.body;
+  let newUser = User({
+    fname: fname,
+    lname: lname,
+    email: email,
+    password: password,
+    userType: userType,
+
+   
+  });
+  var response = await newUser.save();
+
+  res.json(response);
+});
+app.get("/resclient", async (req, res) => {
+  try {
+    const resclients = await resclient.find();
+    res.json(resclients);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+app.post("/projet/add", async (req, res) => {
+  //     try{var response = await personmodel.find({name : "%sa%"})
+  //     res.json(response);
+  // }catch (error){
+  //     console.log()
+  // }
+  console.log(req.body);
+  const { serviceName, subCategory, date, descripition, lieu, prix, etat, chefchantier, employe } = req.body;
+  let newprojet = projet({
+    serviceName: serviceName,
+    subCategory: subCategory,
+    date: date,
+    descripition: descripition,
+    lieu:lieu,
+    prix:prix,
+    etat:etat,
+    chefchantier:chefchantier,
+    employe:employe,
+  });
+  var response = await newprojet.save();
+
+  res.json(response);
+});
+app.get("/employes", async (req, res) => {
+  try {
+    const Employees = await Employee.find(); // Assuming your model name is Service
+    res.json(Employees);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+app.delete("/employee/:nom", async (req, res) => {
+  const nom = req.params.nom;
+
+  try {
+    const deletedemployeeSchema = await Employee.findOneAndDelete({ nom });
+
+    if (!deletedemployeeSchema) {
+      return res.status(404).json({ message: "employe not found" });
+    }
+
+    res.json({ message: "employe deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+// Assuming you have an Express route for handling the update
+app.put('/employee/:nom', async (req, res) => {
+  try {
+    const nom = req.params.nom;
+    const updatedEmployeeData = req.body; // Updated data sent in the request body
+
+    // Find the employee by their name (nom) and update their data
+    const updatedEmployee = await Employee.findOneAndUpdate({ nom: nom }, updatedEmployeeData, { new: true });
+
+    res.json(updatedEmployee);
+  } catch (error) {
+    console.error('Error updating employee:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+app.get("/projet", async (req, res) => {
+  try {
+    const projets = await projet.find(); // Assuming your model name is Service
+    res.json(projets);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+// Backend API endpoint to handle project selection
+app.get("/projet/:id", async (req, res) => {
+  try {
+    const projectId = req.params.id;
+    const project = await projet.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+    res.json(project);
+  } catch (error) {
+    console.error('Error fetching project:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+app.post("/affecter/emp", async (req, res) => {
+  try {
+    // Extract project ID and employee ID from the request body
+    const { projectId, employeeId } = req.body;
+
+    // Your logic to assign the employee to the project
+    // This could involve updating the project document in the database with the employee ID
+
+    // Send a response indicating success
+    res.status(200).json({ message: "Employee assigned to project successfully" });
+  } catch (error) {
+    console.error('Error assigning employee to project:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+app.delete("/service/:name", async (req, res) => {
+  const name = req.params.name;
+
+  try {
+    const deletedserviceSchema = await service.findOneAndDelete({ name });
+
+    if (!deletedserviceSchema) {
+      return res.status(404).json({ message: "service not found" });
+    }
+
+    res.json({ message: "service deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+app.post("/client/add", async (req, res) => {
+  //     try{var response = await personmodel.find({name : "%sa%"})
+  //     res.json(response);
+  // }catch (error){
+  //     console.log()
+  // }
+  console.log(req.body);
+  const { nom, prénom, email, password, numtel, adresse } = req.body;
+  let newclient = client({
+    nom: nom,
+    prénom: prénom,
+    email: email,
+    password: password,
+    numtel:numtel,
+    adresse:adresse,
+  });
+  var response = await newclient.save();
+
+  res.json(response);
+});
+app.get("/client", async (req, res) => {
+  try {
+    const clients = await client.find(); // Assuming your model name is Service
+    res.json(clients);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+app.delete("/client/:nom", async (req, res) => {
+  const nom= req.params.nom;
+
+  try {
+    const deletedclientSchema = await client.findOneAndDelete({ nom});
+
+    if (!deletedclientSchema) {
+      return res.status(404).json({ message: "client not found" });
+    }
+
+    res.json({ message: "client deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+
+

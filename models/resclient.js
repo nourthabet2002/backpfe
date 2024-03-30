@@ -15,11 +15,11 @@ const resclientSchema = new mongoose.Schema({
     
   },
  
-  numberOfrooms: {
-    type: Number,
+  descripition: {
+    type: String,
     
   },
-    place:{
+    lieu:{
         type: String
     }
 });

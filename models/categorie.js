@@ -5,7 +5,14 @@ const categorieSchema = new mongoose.Schema({
   name: {
     type: String,
     
-  }
+  },
+  serviceId : {
+    type : mongoose.Schema.Types.ObjectId,
+    ref : 'service'
+
+}
+,
+
   
  
 }, { collection: "categorie" });
