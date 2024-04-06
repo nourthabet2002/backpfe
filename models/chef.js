@@ -21,7 +21,13 @@ const chefSchema = new mongoose.Schema({
   numtel: {
     type: String,
     required: true
-  }
+  },
+  serviceId : {
+    type : mongoose.Schema.Types.ObjectId,
+    ref : 'service'
+
+}
+,
 });
 {collection :"Chef"}
 

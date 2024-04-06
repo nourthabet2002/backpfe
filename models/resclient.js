@@ -1,27 +1,28 @@
 const mongoose = require('mongoose');
 
 const resclientSchema = new mongoose.Schema({
-  serviceName: {
-    type: String,
-    required: true
-  },
-  subCategory: {
-    type: String,
-    required: true
-  },
+  
   date: {
     type: String,
     required: true
     
   },
  
-  descripition: {
-    type: String,
-    
-  },
     lieu:{
         type: String
+    },
+    categorieId : {
+      type : mongoose.Schema.Types.ObjectId,
+      ref : 'categorie'
+    
     }
+    ,
+    clientId : {
+      type : mongoose.Schema.Types.ObjectId,
+      ref : 'client'
+    
+    }
+    
 });
 {collection :"resclient"}
 

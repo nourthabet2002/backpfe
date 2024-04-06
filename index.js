@@ -48,13 +48,14 @@ mongoose
     //     console.log()
     // }
     console.log(req.body);
-    const { nom, prénom, email, password, numtel } = req.body;
+    const { nom, prénom, email, password, numtel, serviceId } = req.body;
     let newChef = Chefmodel({
       nom: nom,
       prénom: prénom,
       email: email,
       password: password,
       numtel:numtel,
+      serviceId:serviceId,
     });
     var response = await newChef.save();
   
@@ -270,13 +271,13 @@ app.post("/resclient/add", async (req, res) => {
   //     console.log()
   // }
   console.log(req.body);
-  const { serviceName, subCategory, date, descripition, lieu } = req.body;
+  const { date,  lieu, categorieId, clientId } = req.body;
   let newresclient = resclient({
-    serviceName: serviceName,
-    subCategory: subCategory,
+    
     date: date,
-    descripition: descripition,
     lieu:lieu,
+    categorieId:categorieId,
+    clientId:clientId
     
   });
   var response = await newresclient.save();
@@ -293,16 +294,18 @@ app.get("/Reservation", async (req, res) => {
 });
 app.post("/service/add", async (req, res) => {
   try {
-    const { name } = req.body; // Extract name from the request body
+    const { name, description } = req.body;
 
-    // Check if name is provided
-    if (!name) {
-      return res.status(400).json({ error: "Name is required" });
+    // Check if a service with the same name already exists
+    const existingService = await service.findOne({ name: name });
+    if (existingService) {
+      return res.status(400).json({ error: "Service with the same name already exists" });
     }
 
     // Create a new service instance
     let newService = new service({
-      name: name
+      name: name,
+      description: description
     });
 
     // Save the new service to the database
@@ -534,17 +537,19 @@ app.post("/projet/add", async (req, res) => {
   //     console.log()
   // }
   console.log(req.body);
-  const { serviceName, subCategory, date, descripition, lieu, prix, etat, chefchantier, employe } = req.body;
+  const {  date,  lieu, prix, etat, chefchantier, employe, categorieId, clientId } = req.body;
   let newprojet = projet({
-    serviceName: serviceName,
-    subCategory: subCategory,
+   
     date: date,
-    descripition: descripition,
+  
     lieu:lieu,
     prix:prix,
     etat:etat,
     chefchantier:chefchantier,
     employe:employe,
+    categorieId:categorieId,
+    clientId:clientId,
+
   });
   var response = await newprojet.save();
 
@@ -683,7 +688,120 @@ app.delete("/client/:nom", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+app.put('/service/:id', async (req, res) => {
+  const id = req.params.id;
+  const { name, description } = req.body;
+
+  try {
+    const updatedservice = await service.findByIdAndUpdate(
+      id,
+      { $set: { name, description } },
+      { new: true }
+    );
+
+    if (!updatedservice) {
+      return res.status(404).json({ message: 'Chantier not found' });
+    }
+
+    res.status(200).json(updatedservice);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+app.delete("/categorie/:name", async (req, res) => {
+  const name = req.params.name;
+
+  try {
+    const deletedcategorieSchema= await categorie.findOneAndDelete({ name });
+
+    if (!deletedcategorieSchema) {
+      return res.status(404).json({ message: "categorie not found" });
+    }
+
+    res.json({ message: "categorie deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+app.get("/categorie", async (req, res) => {
+  try {
+    const categories = await categorie.find(); // Assuming your model name is Service
+    res.json(categories);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+app.put("/categorie/:nom", async (req, res) => {
+  const name = req.params.nom;
+  const updatedFields = req.body; // Assuming you're sending all updated fields in the request body
+
+  try {
+    const updatedcategorie = await categorie.findOneAndUpdate(
+      { name }, // Filter to find the chef by name
+      { $set: updatedFields }, // Update all fields based on the provided data
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedcategorie) {
+      return res.status(404).json({ message: "categorie not found" });
+    }
+
+    res.json({ message: "categorie updated", updatedcategorie });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+app.put("/service/:name", async (req, res) => {
+  const name = req.params.name;
+  const updatedFields = req.body; // Assuming you're sending all updated fields in the request body
+  console.log("Name:", name);
+  console.log("Updated Fields:", updatedFields);
+  try {
+    const updatedservice = await service.findOneAndUpdate(
+      { name: name }, // Filter to find the service by name
+      { $set: updatedFields }, // Update all fields based on the provided data
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedservice) {
+      return res.status(404).json({ message: "Service not found" });
+    }
+
+    res.json({ message: "Service updated", updatedservice });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 
 
 
+app.put("service/:id", async (req, res) => {
+  try {
+    let result = await service.findByIdAndUpdate(
+      { _id: req.params.id },
+      { $set: { ...req.body } }
+    );
+    res.send({ service: "result", msg: "service is updated" });
+  } catch (error) {
+    console.log(error);
+  }
+});
+app.delete("/resclient/:id", async (req, res) => {
+  console.log(req.params);
+  const id = req.params.id;
+  console.log("id to be deleted =", id);
+
+  try {
+    const deletedresclient = await resclient.findOneAndDelete({ _id: id });
+
+    if (!deletedresclient) {
+      return res.status(404).json({ message: "resclient not found" });
+    }
+
+    res.json({ message: "ressclient deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
