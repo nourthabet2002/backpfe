@@ -630,17 +630,22 @@ app.post("/affecter/emp", async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 app.delete("/service/:name", async (req, res) => {
   const name = req.params.name;
 
   try {
-    const deletedserviceSchema = await service.findOneAndDelete({ name });
+    // Find the service to be deleted
+    const deletedService = await service.findOneAndDelete({ name });
 
-    if (!deletedserviceSchema) {
-      return res.status(404).json({ message: "service not found" });
+    if (!deletedService) {
+      return res.status(404).json({ message: "Service not found" });
     }
 
-    res.json({ message: "service deleted" });
+    // Delete associated categories
+    await categorie.deleteMany({ serviceId: deletedService._id });
+
+    res.json({ message: "Service and associated categories deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
