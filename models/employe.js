@@ -22,10 +22,14 @@ const employeeSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  spécialité: {
-    type: String,
-    required: true
-  }
+  
+  serviceId : {
+    type : mongoose.Schema.Types.ObjectId,
+    ref : 'service'
+
+}
+,
+
 });
 {collection :"Employee"}
 

@@ -42,45 +42,69 @@ mongoose
   });
  
   app.post("/add", async (req, res) => {
-    //     try{var response = await personmodel.find({name : "%sa%"})
-    //     res.json(response);
-    // }catch (error){
-    //     console.log()
-    // }
     console.log(req.body);
     const { nom, prénom, email, password, numtel, serviceId } = req.body;
+
+    // Check if a chef with the same email already exists
+    const existingChef = await Chefmodel.findOne({ email: email });
+
+    if (existingChef) {
+        return res.status(400).json({ error: "Chef with this email already exists." });
+    }
+
+    // If the chef doesn't exist, create a new one and save it
     let newChef = Chefmodel({
       nom: nom,
       prénom: prénom,
       email: email,
       password: password,
-      numtel:numtel,
-      serviceId:serviceId,
+      numtel: numtel,
+      serviceId: serviceId,
     });
-    var response = await newChef.save();
-  
-    res.json(response);
-  });
-  app.post("/employe/add", async (req, res) => {
-    //     try{var response = await personmodel.find({name : "%sa%"})
-    //     res.json(response);
-    // }catch (error){
-    //     console.log()
-    // }
-    console.log(req.body);
-    const { nom, prénom, email, password, numtel, spécialité } = req.body;
-    let newEmployee = Employee({
-      nom: nom,
-      prénom: prénom,
-      email: email,
-      password: password,
-      numtel:numtel,
-      spécialité:spécialité,
+
+    try {
+        var response = await newChef.save();
+        res.json(response);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "An error occurred while adding the chef." });
+    }
+});
+
+
+app.post("/employe/add", async (req, res) => {
+  const { nom, prénom, email, password, numtel, serviceId } = req.body;
+
+  try {
+    // Check if an employee with the same email already exists
+    const existingEmployee = await Employee.findOne({ email });
+
+    if (existingEmployee) {
+      // If an employee with the same email exists, return an error response
+      return res.status(400).json({ error: "Employee with this email already exists" });
+    }
+
+    // If no employee with the same email exists, create a new employee
+    const newEmployee = new Employee({
+      nom,
+      prénom,
+      email,
+      password,
+      numtel,
+      serviceId,
     });
-    var response = await newEmployee.save();
-  
-    res.json(response);
-  });
+
+    // Save the new employee to the database
+    const savedEmployee = await newEmployee.save();
+
+    // Return the saved employee as the response
+    res.json(savedEmployee);
+  } catch (error) {
+    console.error("Error adding employee:", error);
+    res.status(500).json({ error: "An error occurred while adding the employee" });
+  }
+});
+
   app.post("/chantier/add", async (req, res) => {
     //     try{var response = await personmodel.find({name : "%sa%"})
     //     res.json(response);
