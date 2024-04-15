@@ -20,19 +20,21 @@ const employeeSchema = new mongoose.Schema({
   },
   numtel: {
     type: String,
-    required: true
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^[0-9]{8}$/.test(v);
+      },
+      message: props => `${props.value} is not a valid telephone number! Must be composed of eight numbers.`
+    }
   },
-  
-  serviceId : {
-    type : mongoose.Schema.Types.ObjectId,
-    ref : 'service'
-
-}
-,
-
-});
-{collection :"Employee"}
+  serviceId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'service'
+  }
+}, { collection: "employees" });
 
 const Employee = mongoose.model('Employee', employeeSchema);
 
 module.exports = Employee;
+

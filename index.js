@@ -71,7 +71,6 @@ mongoose
     }
 });
 
-
 app.post("/employe/add", async (req, res) => {
   const { nom, prénom, email, password, numtel, serviceId } = req.body;
 
@@ -84,7 +83,12 @@ app.post("/employe/add", async (req, res) => {
       return res.status(400).json({ error: "Employee with this email already exists" });
     }
 
-    // If no employee with the same email exists, create a new employee
+    // Validate telephone number: must be composed of eight digits
+    if (!/^[0-9]{8}$/.test(numtel)) {
+      return res.status(400).json({ error: "Invalid telephone number. Must be composed of eight digits." });
+    }
+
+    // If no employee with the same email exists and telephone number is valid, create a new employee
     const newEmployee = new Employee({
       nom,
       prénom,
@@ -104,6 +108,7 @@ app.post("/employe/add", async (req, res) => {
     res.status(500).json({ error: "An error occurred while adding the employee" });
   }
 });
+
 
   app.post("/chantier/add", async (req, res) => {
     //     try{var response = await personmodel.find({name : "%sa%"})
