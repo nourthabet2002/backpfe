@@ -839,3 +839,55 @@ app.delete("/resclient/:id", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+app.get("/",cors(),(req,res)=>{
+
+})
+
+
+app.post("/",async(req,res)=>{
+    const{email,password}=req.body
+
+    try{
+        const check=await client.findOne({email:email})
+
+        if(check){
+            res.json("exist")
+        }
+        else{
+            res.json("notexist")
+        }
+
+    }
+    catch(e){
+        res.json("fail")
+    }
+
+})
+
+
+
+app.post("/signup",async(req,res)=>{
+    const{email,password}=req.body
+
+    const data={
+        email:email,
+        password:password
+    }
+
+    try{
+        const check=await client.findOne({email:email})
+
+        if(check){
+            res.json("exist")
+        }
+        else{
+            res.json("notexist")
+            await client.insertMany([data])
+        }
+
+    }
+    catch(e){
+        res.json("fail")
+    }
+
+})
