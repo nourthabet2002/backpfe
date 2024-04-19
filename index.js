@@ -866,28 +866,30 @@ app.post("/",async(req,res)=>{
 
 
 
-app.post("/signup",async(req,res)=>{
-    const{email,password}=req.body
+app.post("/signup", async (req, res) => {
+  const { nom, prénom,  email, password,numtel, adresse, } = req.body;
 
-    const data={
-        email:email,
-        password:password
-    }
+  const data = {
+      nom: nom,
+      prénom: prénom,
+      email: email,
+      password: password,
+      numtel: numtel,
+      adresse: adresse
+  };
 
-    try{
-        const check=await client.findOne({email:email})
+  try {
+      const check = await client.findOne({ email: email });
 
-        if(check){
-            res.json("exist")
-        }
-        else{
-            res.json("notexist")
-            await client.insertMany([data])
-        }
-
-    }
-    catch(e){
-        res.json("fail")
-    }
-
-})
+      if (check) {
+          res.json("exist");
+      } else {
+          // Insert the new user data
+          await client.insertMany([data]);
+          // Send the response after successful insertion
+          res.json("notexist");
+      }
+  } catch (e) {
+      res.json("fail");
+  }
+});
