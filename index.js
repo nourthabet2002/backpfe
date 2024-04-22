@@ -893,3 +893,25 @@ app.post("/signup", async (req, res) => {
       res.json("fail");
   }
 });
+
+app.put('/client/:id', async (req, res) => {
+  const id = req.params.id;
+  const { nom, prénom, email, password, numtel, adresse } = req.body;
+
+  try {
+    const updatedclient = await client.findByIdAndUpdate(
+      id,
+      { $set: { nom, prénom, email, password, numtel, adresse } },
+      { new: true }
+    );
+
+    if (!updatedclient) {
+      return res.status(404).json({ message: 'client not found' });
+    }
+
+    res.status(200).json(updatedclient);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
