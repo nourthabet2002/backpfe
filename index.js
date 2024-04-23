@@ -915,3 +915,16 @@ app.put('/client/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+app.get("/client/:email", async (req, res) => {
+  try {
+    const email = req.params.email;
+    const clients = await client.findOne({ email: email });
+    if (!clients) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+    res.json(clients);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
