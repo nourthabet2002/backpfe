@@ -13,9 +13,12 @@ const projetSchema = new mongoose.Schema({
     lieu:{
         type: String
     },
-    prix:{
+    datedebut:{
         type: String
     },
+    duree:{
+      type: String
+  },
     etat:{
       type: String
   },

@@ -28,9 +28,10 @@ const employeeSchema = new mongoose.Schema({
       message: props => `${props.value} is not a valid telephone number! Must be composed of eight numbers.`
     }
   },
-  serviceId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'service'
+  categorieId : {
+    type : mongoose.Schema.Types.ObjectId,
+    ref : 'categorie'
+  
   }
 }, { collection: "employees" });
 

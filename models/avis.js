@@ -5,6 +5,11 @@ const avisSchema = new mongoose.Schema({
   commentaire: {
     type: String,
     
+  },
+  clientId : {
+    type : mongoose.Schema.Types.ObjectId,
+    ref : 'client'
+  
   }
 
 });

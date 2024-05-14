@@ -20,6 +20,7 @@ const User = require("./models/userDetails");
 const affectchef = require("./models/affecterchef");
 const client = require("./models/client");
 const projet = require("./models/projet");
+const resrefuse = require("./models/resrefuse");
 const PORT = process.env.PORT || 7000;
 
 const app = express();
@@ -43,7 +44,7 @@ mongoose
  
   app.post("/add", async (req, res) => {
     console.log(req.body);
-    const { nom, prénom, email, password, numtel, serviceId } = req.body;
+    const { nom, prénom, email, password, numtel, categorieId } = req.body;
 
     // Check if a chef with the same email already exists
     const existingChef = await Chefmodel.findOne({ email: email });
@@ -59,7 +60,7 @@ mongoose
       email: email,
       password: password,
       numtel: numtel,
-      serviceId: serviceId,
+      categorieId: categorieId,
     });
 
     try {
@@ -72,7 +73,7 @@ mongoose
 });
 
 app.post("/employe/add", async (req, res) => {
-  const { nom, prénom, email, password, numtel, serviceId } = req.body;
+  const { nom, prénom, email, password, numtel, categorieId } = req.body;
 
   try {
     // Check if an employee with the same email already exists
@@ -95,7 +96,7 @@ app.post("/employe/add", async (req, res) => {
       email,
       password,
       numtel,
-      serviceId,
+      categorieId,
     });
 
     // Save the new employee to the database
@@ -284,10 +285,11 @@ app.post("/avis/add", async (req, res) => {
   //     console.log()
   // }
   console.log(req.body);
-  const { commentaire } = req.body;
+  const { commentaire, clientId } = req.body;
   let newavis = avis({
    
     commentaire:commentaire,
+    clientId:clientId,
   });
   var response = await newavis.save();
 
@@ -387,7 +389,7 @@ app.post("/categorie/add", async (req, res) => {
 });
 app.get("/avis", async (req, res) => {
   try {
-    const aviss = await avis.find(); // Assuming your model name is Service
+    const aviss = await avis.find().populate('clientId'); // Assuming your model name is Service
     res.json(aviss);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -566,13 +568,14 @@ app.post("/projet/add", async (req, res) => {
   //     console.log()
   // }
   console.log(req.body);
-  const {  date,  lieu, prix, etat, chefchantier, employe, categorieId, clientId } = req.body;
+  const {  date,  lieu, datedebut, duree, etat, chefchantier, employe, categorieId, clientId } = req.body;
   let newprojet = projet({
    
     date: date,
   
     lieu:lieu,
-    prix:prix,
+    datedebut:datedebut,
+    duree:duree,
     etat:etat,
     chefchantier:chefchantier,
     employe:employe,
@@ -844,25 +847,41 @@ app.get("/",cors(),(req,res)=>{
 })
 
 
-app.post("/",async(req,res)=>{
-    const{email,password}=req.body
+// app.post("/",async(req,res)=>{
+//     const{email,password}=req.body
 
-    try{
-        const check=await client.findOne({email:email})
+//     try{
+//         const check=await client.findOne({email:email})
 
-        if(check){
-            res.json("exist")
-        }
-        else{
-            res.json("notexist")
-        }
+//         if(check){
+//             res.json("exist")
+//         }
+//         else{
+//             res.json("notexist")
+//         }
 
+//     }
+//     catch(e){
+//         res.json("fail")
+//     }
+
+// })
+app.post('/', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await client.findOne({ email, password });
+
+    if (user) {
+      res.json({ status: 'exist', email, password, numtel: user.numtel, adresse: user.adresse });
+    } else {
+      res.json({ status: 'notexist' });
     }
-    catch(e){
-        res.json("fail")
-    }
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
-})
 
 
 
@@ -928,3 +947,354 @@ app.get("/client/:email", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+app.get("/logadmin",cors(),(req,res)=>{
+
+})
+
+app.post("/logadmin",async(req,res)=>{
+  const{username,password}=req.body
+
+  try{
+      const check=await admin.findOne({username:username})
+
+      if(check){
+          res.json("exist")
+      }
+      else{
+          res.json("notexist")
+      }
+
+  }
+  catch(e){
+      res.json("fail")
+  }
+
+})
+
+
+app.put('/resclient/:id', async (req, res) => {
+  try {
+    const { etat } = req.body;
+    const { id } = req.params;
+
+    // Update the projet with the provided ID to mark it as "refuse"
+    await projet.findByIdAndUpdate(id, { etat: etat });
+
+    res.json({ message: 'Projet marked as refused' });
+  } catch (error) {
+    console.error('Error marking projet as refused:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+// Assuming you're using Express.js
+app.put('/resclient/:id/refuse', async (req, res) => {
+  try {
+    const { etat } = req.body; // Assuming the request body contains the new state
+    const { id } = req.params; // Extract the reservation ID from the URL parameter
+
+    // Update the reservation with the provided ID to mark it as "refused"
+    // This depends on your database schema and how reservations are stored
+    // Replace 'Reservation' with the appropriate model and method to update the state
+    // For example, if you're using Mongoose, it might be Reservation.findByIdAndUpdate()
+    // Make sure to handle errors appropriately
+    // For example, if the reservation is not found, return a 404 error
+    // If the update is successful, return a success message or the updated reservation
+    // This example assumes you're using MongoDB with Mongoose
+    const updatedReservation = await Reservation.findByIdAndUpdate(id, { etat: etat });
+
+    res.json({ message: 'Reservation marked as refused', reservation: updatedReservation });
+  } catch (error) {
+    console.error('Error marking reservation as refused:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+// app.post("/resclient/add", async (req, res) => {
+//   try {
+//     const { date, lieu, categorieId, clientId } = req.body;
+
+//     // Validate clientId if necessary
+
+//     // Ensure the appointment is associated with the correct user
+//     const newresclient = new resclient({
+//       date,
+//       lieu,
+//       categorieId,
+//       clientId
+//     });
+
+//     // Save the appointment to the database
+//     const savedresclient = await newresclient.save();
+
+//     res.json(savedresclient);
+//   } catch (error) {
+//     console.error("Error creating appointment:", error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// });
+app.post("/resrefuse/add", async (req, res) => {
+  //     try{var response = await personmodel.find({name : "%sa%"})
+  //     res.json(response);
+  // }catch (error){
+  //     console.log()
+  // }
+  console.log(req.body);
+  const { date, lieu, categorieId,  clientId, etat } = req.body;
+  let newresrefuse = resrefuse({
+    
+    date: date,
+    lieu: lieu,
+    categorieId:categorieId,
+    clientId:clientId,
+    etat: etat
+  });
+  var response = await newresrefuse.save();
+
+  res.json(response);
+});
+app.get("/logchef",cors(),(req,res)=>{
+
+})
+
+app.post("/logchef",async(req,res)=>{
+  const{email,password}=req.body
+
+  try{
+      const check=await Chefmodel.findOne({email:email})
+
+      if(check){
+          res.json("exist")
+      }
+      else{
+          res.json("notexist")
+      }
+
+  }
+  catch(e){
+      res.json("fail")
+  }
+
+})
+
+app.get("/services", async (req, res) => {
+  try {
+    // Fetch all services
+    const services = await service.find();
+
+    // Fetch categories for each service
+    const servicesWithCategories = await Promise.all(service.map(async (service) => {
+      const categories = await categorie.find({ serviceId: service._id });
+      return {
+        name: service.name,
+        categories: categories.map(category => category.name)
+      };
+    }));
+
+    res.json(servicesWithCategories);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+async function countEmployees() {
+  try {
+    const employeeCount = await Employee.countDocuments();
+    console.log("Total number of employees:", employeeCount);
+    return employeeCount;
+  } catch (err) {
+    console.error("Error counting employees:", err);
+    throw err;
+  }
+}
+
+// Call the function
+countEmployees();
+app.get('/employees/count', async (req, res) => {
+  try {
+    const employeeCount = await Employee.countDocuments();
+    res.json({ count: employeeCount });
+  } catch (err) {
+    console.error("Error counting employees:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get('/projects/inprogress/count', async (req, res) => {
+  try {
+    const inProgressProjectsCount = await projet.countDocuments({ etat: 'en cours' });
+    res.json({ count: inProgressProjectsCount });
+  } catch (err) {
+    console.error("Error counting projects in progress:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get('/projects/completed/count', async (req, res) => {
+  try {
+    const completedProjectsCount = await projet.countDocuments({ etat: 'terminé' });
+    res.json({ count: completedProjectsCount });
+  } catch (err) {
+    console.error("Error counting completed projects:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.get('/services/count', async (req, res) => {
+  try {
+    const serviceCount = await service.countDocuments();
+    res.json({ count: serviceCount });
+  } catch (err) {
+    console.error("Error counting services:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.get('/chefs/count', async (req, res) => {
+  try {
+    const chefCount = await Chefmodel.countDocuments();
+    res.json({ count: chefCount });
+  } catch (err) {
+    console.error("Error counting chefs:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.get('/resclients/count', async (req, res) => {
+  try {
+    const resClientCount = await resclient.countDocuments();
+    res.json({ count: resClientCount });
+  } catch (err) {
+    console.error("Error counting resclients:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Assuming you have a router object
+
+
+app.get('/chefs', async (req, res) => {
+  const { categorieId } = req.query;
+
+  try {
+    const chefs = await Chefmodel.find({ categorieId }); // Query chefs by category ID
+    res.json(chefs);
+  } catch (error) {
+    console.error('Error fetching chefs:', error);
+    res.status(500).send('An error occurred while fetching chefs.');
+  }
+});
+
+
+app.get('/employe', async (req, res) => {
+  const { categorieId } = req.query;
+
+  try {
+    const employe = await Employee.find({ categorieId }); // Query chefs by category ID
+    res.json(employe );
+  } catch (error) {
+    console.error('Error fetching employe:', error);
+    res.status(500).send('An error occurred while fetching employe.');
+  }
+});
+
+app.get('/projects/paused/count', async (req, res) => {
+  try {
+    const pausedProjectsCount = await projet.countDocuments({ etat: 'En pause' });
+    res.json({ count: pausedProjectsCount });
+  } catch (err) {
+    console.error("Error counting paused projects:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+app.get('/servicee/:id', async (req, res) => {
+  try {
+    const services = await service.findById(req.params.id);
+    if (!services) {
+      return res.status(404).json({ message: 'Service not found' });
+    }
+    res.json(services);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+// app.put('/updateUser', async (req, res) => {
+//   const { email, password, numtel, adresse } = req.body;
+
+//   try {
+//     const updatedUser = await client.findOneAndUpdate({ email }, { password, numtel, adresse }, { new: true });
+
+//     if (!updatedUser) {
+//       return res.status(404).json({ error: 'User not found' });
+//     }
+
+//     res.json(updatedUser);
+//   } catch (error) {
+//     console.error('Error updating user:', error);
+//     res.status(500).json({ error: 'Could not update user' });
+//   }
+// });
+app.put('/updateUser', async (req, res) => {
+  const { email: newEmail, password, numtel, adresse } = req.body;
+
+  try {
+    // Retrieve the existing user from the database
+    const existingUser = await client.findOne({ email: newEmail });
+
+    // Check if the new email is different from the existing one
+    if (existingUser && existingUser.email !== newEmail) {
+      return res.status(400).json({ error: 'Email already in use' });
+    }
+
+    // Update the user's information
+    const updatedUser = await client.findOneAndUpdate({ email: newEmail }, { password, numtel, adresse }, { new: true });
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.json(updatedUser);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    return res.status(500).json({ error: 'Could not update user' });
+  }
+});
+
+// app.put('/updateUser', async (req, res) => {
+//   const { email: newEmail, password, numtel, adresse } = req.body;
+
+//   try {
+//     // Retrieve the existing user from the database
+//     const existingUser = await client.findOne({ email: newEmail });
+
+//     // If the user exists and the email is different, return an error message
+//     if (existingUser && existingUser.email !== newEmail) {
+//       return res.status(400).json({ error: 'Email already in use' });
+//     }
+
+//     // Update the user's information
+//     const updatedUser = await client.findOneAndUpdate(
+//       { email: newEmail },
+//       { password, numtel, adresse },
+//       { new: true }
+//     );
+
+//     // If the user is not found, return an error message
+//     if (!updatedUser) {
+//       return res.status(404).json({ error: 'User not found' });
+//     }
+
+//     // Return the updated user information
+//     return res.json(updatedUser);
+//   } catch (error) {
+//     console.error('Error updating user:', error);
+//     return res.status(500).json({ error: 'Could not update user' });
+//   }
+// });
+
+
+
+
+
