@@ -873,7 +873,7 @@ app.post('/', async (req, res) => {
     const user = await client.findOne({ email, password });
 
     if (user) {
-      res.json({ status: 'exist', email, password, numtel: user.numtel, adresse: user.adresse });
+      res.json({ status: 'exist', email, password, numtel: user.numtel, adresse: user.adresse, nom: user.nom, id:user._id });
     } else {
       res.json({ status: 'notexist' });
     }
@@ -1237,19 +1237,19 @@ app.get('/servicee/:id', async (req, res) => {
 //   }
 // });
 app.put('/updateUser', async (req, res) => {
-  const { email: newEmail, password, numtel, adresse } = req.body;
+  const { id, email, password, numtel, adresse } = req.body;
 
   try {
     // Retrieve the existing user from the database
-    const existingUser = await client.findOne({ email: newEmail });
+    const existingUser = await client.findOne({id});
 
     // Check if the new email is different from the existing one
-    if (existingUser && existingUser.email !== newEmail) {
+    if (existingUser && existingUser.email !== email) {
       return res.status(400).json({ error: 'Email already in use' });
     }
 
     // Update the user's information
-    const updatedUser = await client.findOneAndUpdate({ email: newEmail }, { password, numtel, adresse }, { new: true });
+    const updatedUser = await client.findOneAndUpdate({_id : id}, { email ,password, numtel, adresse }, { new: true });
 
     if (!updatedUser) {
       return res.status(404).json({ error: 'User not found' });
