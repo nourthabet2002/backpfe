@@ -10,6 +10,11 @@ const avisSchema = new mongoose.Schema({
     type : mongoose.Schema.Types.ObjectId,
     ref : 'client'
   
+  },
+  date: {
+    type: String,
+    required: true,
+    default: Date.now
   }
 
 });

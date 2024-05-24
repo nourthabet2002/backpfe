@@ -285,35 +285,37 @@ app.post("/avis/add", async (req, res) => {
   //     console.log()
   // }
   console.log(req.body);
-  const { commentaire, clientId } = req.body;
+  const { commentaire, clientId, date } = req.body;
+  const currentDate = date || new Date().toISOString().split('T')[0];
   let newavis = avis({
    
     commentaire:commentaire,
     clientId:clientId,
+    date:currentDate,
   });
   var response = await newavis.save();
 
   res.json(response);
 });
 app.post("/resclient/add", async (req, res) => {
-  //     try{var response = await personmodel.find({name : "%sa%"})
-  //     res.json(response);
-  // }catch (error){
-  //     console.log()
-  // }
   console.log(req.body);
-  const { date,  lieu, categorieId, clientId } = req.body;
-  let newresclient = resclient({
-    
-    date: date,
-    lieu:lieu,
-    categorieId:categorieId,
-    clientId:clientId
-    
-  });
-  var response = await newresclient.save();
-
-  res.json(response);
+  const { name, adresse, numtel, date, lieu, categorieId, clientId } = req.body;
+  try {
+    let newresclient = resclient({
+      name: name,
+      adresse: adresse,
+      numtel: numtel,
+      date: date,
+      lieu: lieu,
+      categorieId: categorieId,
+      clientId: clientId
+    });
+    var response = await newresclient.save();
+    res.status(201).json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: error.message });
+  }
 });
 app.get("/Reservation", async (req, res) => {
   try {
@@ -568,17 +570,17 @@ app.post("/projet/add", async (req, res) => {
   //     console.log()
   // }
   console.log(req.body);
-  const {  date,  lieu, datedebut, duree, etat, chefchantier, employe, categorieId, clientId } = req.body;
+  const {  date,  adresse, datedebut, duree, etat, chefchantier,  categorieId, clientId } = req.body;
   let newprojet = projet({
    
     date: date,
   
-    lieu:lieu,
+    adresse:adresse,
     datedebut:datedebut,
     duree:duree,
     etat:etat,
     chefchantier:chefchantier,
-    employe:employe,
+   
     categorieId:categorieId,
     clientId:clientId,
 
@@ -1077,13 +1079,13 @@ app.post("/logchef",async(req,res)=>{
 
 })
 
-app.get("/services", async (req, res) => {
+app.get("/servicessss", async (req, res) => {
   try {
     // Fetch all services
     const services = await service.find();
 
     // Fetch categories for each service
-    const servicesWithCategories = await Promise.all(service.map(async (service) => {
+    const servicesWithCategories = await Promise.all(services.map(async (service) => {
       const categories = await categorie.find({ serviceId: service._id });
       return {
         name: service.name,
@@ -1096,6 +1098,9 @@ app.get("/services", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+
+
 
 async function countEmployees() {
   try {
@@ -1113,6 +1118,7 @@ countEmployees();
 app.get('/employees/count', async (req, res) => {
   try {
     const employeeCount = await Employee.countDocuments();
+    // console.log(`Total employees: ${count}`);
     res.json({ count: employeeCount });
   } catch (err) {
     console.error("Error counting employees:", err);
@@ -1293,8 +1299,59 @@ app.put('/updateUser', async (req, res) => {
 //     return res.status(500).json({ error: 'Could not update user' });
 //   }
 // });
+// app.post('/avis', async (req, res) => {
+//   try {
+//     const { commentaire, clientId, date } = req.body;
+
+//     // If date is not provided, set it to the current date
+//     const currentDate = date || new Date().toISOString().split('T')[0];
+
+//     const newavis = avis({
+//       commentaire,
+//       clientId,
+//       date: currentDate
+//     });
+
+//     await newavis.save();
+
+//     res.status(201).json(newavis);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error creating avis', error });
+//   }
+// });
 
 
 
+// Get resclient data for a specific client
 
+
+// Using POST for fetching projet data for a specific client
+// Using POST for fetching resclient data for a specific client
+// Using POST for fetching resclient data for a specific client
+app.post("/resclientcl", async (req, res) => {
+  const { userId } = req.body;  // Extract userId from request body
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ message: "Invalid user ID format" });
+  }
+  try {
+    const resclients = await resclient.find({ clientId: new mongoose.Types.ObjectId(userId) });
+    res.json(resclients);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Using POST for fetching projet data for a specific client
+app.post("/projetcl", async (req, res) => {
+  const { userId } = req.body;  // Extract userId from request body
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ message: "Invalid user ID format" });
+  }
+  try {
+    const projets = await projet.find({ clientId: new mongoose.Types.ObjectId(userId) });
+    res.json(projets);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 

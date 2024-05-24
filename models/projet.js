@@ -10,7 +10,7 @@ const projetSchema = new mongoose.Schema({
   },
  
 
-    lieu:{
+    adresse:{
         type: String
     },
     datedebut:{
@@ -25,9 +25,7 @@ const projetSchema = new mongoose.Schema({
   chefchantier:{
     type: String
 },
-employe:{
-  type: String
-},
+
 categorieId : {
   type : mongoose.Schema.Types.ObjectId,
   ref : 'categorie'
@@ -38,12 +36,18 @@ clientId : {
   type : mongoose.Schema.Types.ObjectId,
   ref : 'client'
 
+},
+resclientId : {
+  type : mongoose.Schema.Types.ObjectId,
+  ref : 'resclient'
+
 }
+
     
 
 });
-{collection :"projet"}
+{collection :"projets"}
 
-const projet = mongoose.model('projet', projetSchema);
+const projet = mongoose.model('projets', projetSchema);
 
 module.exports = projet;
