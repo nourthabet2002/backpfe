@@ -21,6 +21,7 @@ const affectchef = require("./models/affecterchef");
 const client = require("./models/client");
 const projet = require("./models/projet");
 const resrefuse = require("./models/resrefuse");
+const affecteremp = require("./models/affemploye");
 const PORT = process.env.PORT || 7000;
 
 const app = express();
@@ -300,6 +301,7 @@ app.post("/avis/add", async (req, res) => {
 app.post("/resclient/add", async (req, res) => {
   console.log(req.body);
   const { name, adresse, numtel, date, lieu, categorieId, clientId } = req.body;
+  console.log("Received date:", date);
   try {
     let newresclient = resclient({
       name: name,
@@ -889,6 +891,9 @@ app.post('/', async (req, res) => {
 
 app.post("/signup", async (req, res) => {
   const { nom, prénom,  email, password,numtel, adresse, } = req.body;
+  if (!/^\d{8}$/.test(numtel)) {
+    return res.status(400).json({ error: "Numtel doit etre composé de 8chifffres." });
+  }
 
   const data = {
       nom: nom,
@@ -1355,3 +1360,20 @@ app.post("/projetcl", async (req, res) => {
   }
 });
 
+app.post("/affemploye/add", async (req, res) => {
+  //     try{var response = await personmodel.find({name : "%sa%"})
+  //     res.json(response);
+  // }catch (error){
+  //     console.log()
+  // }
+  console.log(req.body);
+  const { projetId, EmployeeId, date } = req.body;
+  let newaffecteremploye = affecteremp({
+    projetId:projetId,
+    EmployeeId:EmployeeId,
+    date:date
+  });
+  var response = await newaffecteremploye.save();
+
+  res.json(response);
+});
